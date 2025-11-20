@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json.schemastore.org/angular-cli",
+  "version": 1,
+  "defaultProject": "app-lists",
+  "projects": {
+    "app-lists": {
+      "projectType": "application",
+      "root": "projects/app-lists",
+      "sourceRoot": "projects/app-lists/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/app-lists",
+            "index": "projects/app-lists/src/index.html",
+            "main": "projects/app-lists/src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "projects/app-lists/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": ["projects/app-lists/src/favicon.ico", "projects/app-lists/src/assets"],
+            "styles": ["projects/app-lists/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2MB",
+                  "maximumError": "5MB"
+                }
+              ],
+              "outputHashing": "all"
+            }
+          }
+        }
+      }
+    },
+    "app-detail": {
+      "projectType": "application",
+      "root": "projects/app-detail",
+      "sourceRoot": "projects/app-detail/src",
+      "prefix": "detail",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/app-detail",
+            "index": "projects/app-detail/src/index.html",
+            "main": "projects/app-detail/src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "projects/app-detail/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": ["projects/app-detail/src/favicon.ico", "projects/app-detail/src/assets"],
+            "styles": ["projects/app-detail/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2MB",
+                  "maximumError": "5MB"
+                }
+              ],
+              "outputHashing": "all"
+            }
+          }
+        }
+      }
+    },
+    "shared-lib": {
+      "projectType": "library",
+      "root": "projects/shared-lib",
+      "sourceRoot": "projects/shared-lib/src",
+      "prefix": "shared",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/shared-lib/ng-package.json"
+          }
+        }
+      }
+    }
+  }
+}

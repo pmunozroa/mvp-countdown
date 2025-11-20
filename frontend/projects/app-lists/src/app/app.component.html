@@ -1,0 +1,34 @@
+<!-- Interfaz simple para administrar listas -->
+<section>
+  <h1>RO MVP Timer - Listas</h1>
+  <button type="button" (click)="login()">Iniciar sesión</button>
+  <button type="button" (click)="logout()">Cerrar sesión</button>
+</section>
+<section *ngIf="loading()">Cargando...</section>
+<section *ngIf="error() as message">Error: {{ message }}</section>
+<section>
+  <h2>Tus listas</h2>
+  <ul>
+    <li *ngFor="let item of lists()" (click)="selectedList = item.listId" [class.seleccionada]="selectedList === item.listId">
+      {{ item.name || 'Sin nombre' }} ({{ item.role }})
+    </li>
+  </ul>
+</section>
+<section>
+  <h2>Crear nueva lista</h2>
+  <input [(ngModel)]="newListName" placeholder="Nombre de la lista" />
+  <button type="button" (click)="createList()">Crear</button>
+</section>
+<section>
+  <h2>Compartir lista</h2>
+  <p *ngIf="!selectedList">Selecciona una lista para compartir.</p>
+  <div *ngIf="selectedList">
+    <input [(ngModel)]="shareEmail" placeholder="correo@example.com" />
+    <select [(ngModel)]="shareRole">
+      <option value="viewer">Lector</option>
+      <option value="editor">Editor</option>
+      <option value="owner">Propietario</option>
+    </select>
+    <button type="button" (click)="share()">Compartir</button>
+  </div>
+</section>

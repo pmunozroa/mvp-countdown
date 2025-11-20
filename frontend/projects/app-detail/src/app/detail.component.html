@@ -1,0 +1,46 @@
+<!-- Vista para manejar timers -->
+<section>
+  <h1>RO MVP Timer - Detalle</h1>
+  <button type="button" (click)="login()">Iniciar sesión</button>
+  <button type="button" (click)="logout()">Cerrar sesión</button>
+</section>
+<section *ngIf="error() as message">Error: {{ message }}</section>
+<section *ngIf="loading()">Cargando datos...</section>
+<section>
+  <h2>Registrar muerte</h2>
+  <label>
+    MVP
+    <select [(ngModel)]="selectedMvp">
+      <option [ngValue]="null">Selecciona...</option>
+      <option *ngFor="let mvp of mvps()" [value]="mvp.mvpId">{{ mvp.name }} - {{ mvp.map }}</option>
+    </select>
+  </label>
+  <label>
+    Marca de tiempo (ms)
+    <input type="number" [(ngModel)]="lastDeathAt" />
+  </label>
+  <button type="button" (click)="markDeath()">Guardar</button>
+</section>
+<section>
+  <h2>Timers registrados</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>MVP</th>
+        <th>Última muerte</th>
+        <th>Inicio ventana</th>
+        <th>Fin ventana</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let timer of timers()">
+        <td>{{ timer.mvpId }}</td>
+        <td>{{ timer.lastDeathAt }}</td>
+        <td>{{ timer.spawnStart }}</td>
+        <td>{{ timer.spawnEnd }}</td>
+        <td>{{ timer.status }}</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

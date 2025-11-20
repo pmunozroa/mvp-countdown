@@ -1,0 +1,407 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RO MVP Timer infraestructura
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 10
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        USERS_TABLE: !Ref UsersTable
+        LISTS_TABLE: !Ref ListsTable
+        LIST_SHARES_TABLE: !Ref ListSharesTable
+        TIMERS_TABLE: !Ref TimersTable
+        MVPS_TABLE: !Ref MvpsTable
+        INVITES_TABLE: !Ref InvitesTable
+        LISTS_OWNER_INDEX: ownerUserId-index
+        LIST_SHARES_USER_INDEX: userId-index
+        USERS_EMAIL_INDEX: email-index
+        RAGNA_PI_BASE_URL: https://api.ragnapi.com/mvps
+Resources:
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+  ListsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: listId
+          AttributeType: S
+        - AttributeName: ownerUserId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: listId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: ownerUserId-index
+          KeySchema:
+            - AttributeName: ownerUserId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+  ListSharesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: listId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: listId
+          KeyType: HASH
+        - AttributeName: userId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: userId-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+  TimersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: listId
+          AttributeType: S
+        - AttributeName: mvpId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: listId
+          KeyType: HASH
+        - AttributeName: mvpId
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  MvpsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: mvpId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: mvpId
+          KeyType: HASH
+  InvitesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: listId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: listId
+          KeyType: RANGE
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: ro-mvp-user-pool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: ro-mvp-client
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - https://example.com/lists/
+        - https://example.com/detail/
+      LogoutURLs:
+        - https://example.com/lists/
+        - https://example.com/detail/
+      SupportedIdentityProviders:
+        - COGNITO
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub "ro-mvp-timer-${AWS::AccountId}-${AWS::Region}"
+      UserPoolId: !Ref UserPool
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowMethods: ['GET', 'POST', 'OPTIONS']
+        AllowHeaders: ['Authorization', 'Content-Type']
+        AllowOrigins: ['*']
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              audience:
+                - !Ref UserPoolClient
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+        DefaultAuthorizer: CognitoAuthorizer
+  ListsReadFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/lists-read/handler.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ListsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ListSharesTable
+      Events:
+        GetLists:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: GET
+            Path: /lists
+  ListsWriteFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/lists-write/handler.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ListsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ListSharesTable
+      Events:
+        PostList:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: POST
+            Path: /lists
+  ListShareFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/list-share/handler.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ListSharesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ListSharesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref InvitesTable
+      Events:
+        ShareList:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: POST
+            Path: /lists/{listId}/share
+  TimersReadFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/timers-read/handler.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TimersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ListSharesTable
+      Events:
+        GetTimers:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: GET
+            Path: /lists/{listId}/timers
+  TimersWriteFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/timers-write/handler.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ListSharesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref MvpsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TimersTable
+      Events:
+        MarkDeath:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: POST
+            Path: /lists/{listId}/timers/{mvpId}/mark-death
+  MvpCatalogFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/mvp-catalog/handler.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MvpsTable
+      Events:
+        GetMvp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: GET
+            Path: /mvps
+  RagnaPiSyncFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/ragnapi-sync/handler.handler
+      Environment:
+        Variables:
+          RAGNA_PI_BASE_URL: https://api.ragnapi.com/mvps
+          RAGNA_PI_API_KEY: !Sub '{{resolve:secretsmanager:${RagnaPiApiKey}::}}'
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MvpsTable
+        - Statement:
+            Effect: Allow
+            Action: secretsmanager:GetSecretValue
+            Resource: !Ref RagnaPiApiKey
+      Events:
+        SyncMvps:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: POST
+            Path: /admin/sync-mvps
+  RagnaPiApiKey:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: ro-mvp-ragnapi-key
+      Description: Llave opcional para RagnaPI
+  PostConfirmationFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/post-confirmation-trigger/handler.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ListSharesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref InvitesTable
+      Events:
+        CognitoTrigger:
+          Type: Cognito
+          Properties:
+            UserPool: !Ref UserPool
+            Trigger: PostConfirmation
+  TimersTtlStreamFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend
+      Handler: dist/functions/timers-ttl-stream/handler.handler
+      Events:
+        StreamEvent:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt TimersTable.StreamArn
+            StartingPosition: LATEST
+  StaticBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "ro-mvp-static-${AWS::AccountId}-${AWS::Region}"
+  StaticBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFront
+            Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Action: s3:GetObject
+            Resource: !Sub "${StaticBucket.Arn}/*"
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Acceso privado al bucket
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: static-origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          ForwardedValues:
+            QueryString: false
+        Origins:
+          - Id: static-origin
+            DomainName: !GetAtt StaticBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}'
+        DefaultRootObject: 'lists/index.html'
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: '/lists/index.html'
+  ApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /ro-mvp/api-url
+      Type: String
+      Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com"
+Outputs:
+  ApiEndpoint:
+    Description: URL de la API
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com"
+  CloudFrontDomain:
+    Description: Dominio de distribución
+    Value: !GetAtt Distribution.DomainName
+  StaticBucketName:
+    Description: Bucket para los artefactos web
+    Value: !Ref StaticBucket
+  UserPoolId:
+    Description: ID del User Pool
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Description: ID del cliente de User Pool
+    Value: !Ref UserPoolClient
