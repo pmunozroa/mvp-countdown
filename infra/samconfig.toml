@@ -1,0 +1,13 @@
+# Configuración de despliegue SAM; ajusta los valores antes de usar en producción.
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "ro-mvp-timer"
+region = "us-east-1"
+capabilities = "CAPABILITY_NAMED_IAM"
+confirm_changeset = true
+resolve_s3 = true
+s3_prefix = "ro-mvp"
+parameter_overrides = ""
