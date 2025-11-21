@@ -39,13 +39,10 @@ export class ApiClientService {
 
   async createList(name: string): Promise<ListSummary> {
     /* Crea una nueva lista */
-    const data = await this.request<{ listId: string; name: string }>(
-      '/lists',
-      {
-        method: 'POST',
-        body: JSON.stringify({ name })
-      }
-    );
+    const data = await this.request<{ listId: string; name: string }>('/lists', {
+      method: 'POST',
+      body: JSON.stringify({ name })
+    });
     return { listId: data.listId, name: data.name, role: 'owner' };
   }
 

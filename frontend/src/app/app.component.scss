@@ -1,0 +1,25 @@
+/* Estilos básicos del contenedor principal */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
+a {
+  color: #1f5fbf;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+main {
+  margin-top: 1rem;
+}

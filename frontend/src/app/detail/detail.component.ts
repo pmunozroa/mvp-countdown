@@ -1,11 +1,11 @@
-/* Componente para gestionar timers de una lista concreta */
+/* Componente para gestionar timers de una lista concreta dentro de la aplicación unificada */
 import { Component, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiClientService, AuthService, TimerItem, MvpItem } from '../../../shared-lib/src/public-api';
+import { ApiClientService, AuthService, TimerItem, MvpItem } from '../shared';
 
 @Component({
-  selector: 'detail-root',
+  selector: 'app-detail',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './detail.component.html',

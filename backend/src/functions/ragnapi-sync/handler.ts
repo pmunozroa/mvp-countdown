@@ -31,13 +31,8 @@ export const handler = async (event: HttpEvent): Promise<HttpResponse> => {
   const env = loadEnv();
   const ddb = getDocumentClient();
 
-  const headers: Record<string, string> = { Accept: 'application/json' };
-  if (env.ragnaPiApiKey) {
-    headers['x-api-key'] = env.ragnaPiApiKey;
-  }
-
   const response = await fetch(env.ragnaPiBaseUrl, {
-    headers
+    headers: { Accept: 'application/json' }
   });
   if (!response.ok) {
     return jsonResponse(502, { message: 'Error al consultar RagnaPI' });

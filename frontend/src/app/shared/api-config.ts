@@ -1,4 +1,4 @@
-/* Tokens de configuración para compartir entre aplicaciones */
+/* Tokens de configuración para compartir dentro de la aplicación */
 import { InjectionToken } from '@angular/core';
 
 export interface ApiConfig {

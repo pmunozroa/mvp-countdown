@@ -290,14 +290,9 @@ Resources:
       Environment:
         Variables:
           RAGNA_PI_BASE_URL: https://api.ragnapi.com/mvps
-          RAGNA_PI_API_KEY: !Sub '{{resolve:secretsmanager:${RagnaPiApiKey}::}}'
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref MvpsTable
-        - Statement:
-            Effect: Allow
-            Action: secretsmanager:GetSecretValue
-            Resource: !Ref RagnaPiApiKey
       Events:
         SyncMvps:
           Type: HttpApi
@@ -305,11 +300,6 @@ Resources:
             ApiId: !Ref Api
             Method: POST
             Path: /admin/sync-mvps
-  RagnaPiApiKey:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: ro-mvp-ragnapi-key
-      Description: Llave opcional para RagnaPI
   PostConfirmationFn:
     Type: AWS::Serverless::Function
     Properties:

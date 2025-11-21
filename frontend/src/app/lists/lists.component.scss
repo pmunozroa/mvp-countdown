@@ -1,0 +1,22 @@
+/* Estilos mínimos para la lista unificada */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+li.seleccionada {
+  background: #d0e8ff;
+}
+
+a {
+  font-size: 0.9rem;
+}

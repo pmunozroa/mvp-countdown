@@ -1,17 +1,18 @@
-/* Componente principal para administrar listas */
+/* Componente principal para administrar listas dentro de la aplicación unificada */
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiClientService, AuthService, ListSummary, ShareRequest } from '../../../shared-lib/src/public-api';
+import { RouterLink } from '@angular/router';
+import { ApiClientService, AuthService, ListSummary, ShareRequest } from '../shared';
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-lists',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './lists.component.html',
+  styleUrl: './lists.component.scss'
 })
-export class AppComponent {
+export class ListsComponent {
   /* Estados de la vista */
   readonly lists = signal<ListSummary[]>([]);
   readonly loading = signal(false);

@@ -11,6 +11,7 @@
   <ul>
     <li *ngFor="let item of lists()" (click)="selectedList = item.listId" [class.seleccionada]="selectedList === item.listId">
       {{ item.name || 'Sin nombre' }} ({{ item.role }})
+      <a *ngIf="item.listId" [routerLink]="['/detalle']" [queryParams]="{ listId: item.listId }">Ver detalle</a>
     </li>
   </ul>
 </section>

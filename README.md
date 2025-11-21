@@ -2,7 +2,7 @@
 
 
 
-Implementación completa de la solución RO MVP Timer con backend en AWS SAM y frontend Angular multipágina.
+Implementación completa de la solución RO MVP Timer con backend en AWS SAM y frontend Angular unificado.
 
 
 
@@ -68,7 +68,7 @@ Implementación completa de la solución RO MVP Timer con backend en AWS SAM y f
 
 &nbsp;  ```
 
-2\. Compilar aplicaciones:
+2\. Compilar la aplicación:
 
 &nbsp;  ```bash
 
@@ -76,7 +76,7 @@ Implementación completa de la solución RO MVP Timer con backend en AWS SAM y f
 
 &nbsp;  ```
 
-&nbsp;  - Los artefactos se generan en `dist/app-lists` y `dist/app-detail`.
+&nbsp;  - Los artefactos se generan en `dist/mvp-app`.
 
 
 
@@ -84,15 +84,13 @@ Implementación completa de la solución RO MVP Timer con backend en AWS SAM y f
 
 &nbsp;  ```bash
 
-&nbsp;  aws s3 sync dist/app-lists s3://<bucket>/lists/
-
-&nbsp;  aws s3 sync dist/app-detail s3://<bucket>/detail/
+&nbsp;  aws s3 sync dist/mvp-app s3://<bucket>/
 
 &nbsp;  ```
 
 
 
-4\. Configurar `window.\_\_env` en cada `index.html` con valores reales de API y Cognito.
+4\. Configurar `window.__env` en el `index.html` con valores reales de API y Cognito.
 
 
 
@@ -158,5 +156,5 @@ Las pruebas unitarias verifican el cálculo de ventanas de respawn y la lógica 
 
 \- Asegurarse de definir dominios válidos de Cognito para los callbacks.
 
-\- Configurar el secreto `RagnaPiApiKey` si la API externa requiere credenciales.
+
 

@@ -10,7 +10,6 @@ export interface EnvConfig {
   sharedWithIndexName: string;
   userEmailIndexName: string;
   ragnaPiBaseUrl: string;
-  ragnaPiApiKey?: string;
 }
 
 export const loadEnv = (): EnvConfig => {
@@ -44,8 +43,7 @@ export const loadEnv = (): EnvConfig => {
     ownerIndexName: required.ownerIndexName!,
     sharedWithIndexName: required.sharedWithIndexName!,
     userEmailIndexName: required.userEmailIndexName!,
-    ragnaPiBaseUrl: required.ragnaPiBaseUrl!,
-    ragnaPiApiKey: process.env.RAGNA_PI_API_KEY
+    ragnaPiBaseUrl: required.ragnaPiBaseUrl!
   };
   return config;
 };
